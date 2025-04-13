@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import {
   BrowserProvider,
   Contract,
-  formatEther,
-  parseEther
-} from 'ethers';
+  formatEther
+} from "ethers";
 import { motion } from "framer-motion";
 import { IDKitWidget } from "@worldcoin/idkit";
 import xDogeStakingABI from "./abi/xDogeStakingABI.json";
@@ -26,7 +25,7 @@ function App() {
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [balance, setBalance] = useState<string>("0");
-  const [amount, setAmount] = useState<string>("");
+  const [amount, setAmount] = useState<string>("0");
   const [duration, setDuration] = useState<string>("604800");
   const [stakingStart, setStakingStart] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
@@ -52,7 +51,7 @@ function App() {
       const token = new ethers.Contract(TOKEN_ADDRESS, ERC20ABI, signer);
       const address = await signer.getAddress();
       const rawBalance = await token.balanceOf(address);
-      setBalance(ethers.formatEther(rawBalance));
+      setBalance(formatEther(rawBalance));
     }
   };
 
@@ -63,7 +62,7 @@ function App() {
     if (stake.amount > 0n && !stake.unstaked) {
       setStakingStart(Number(stake.startTime));
       const reward = await contract.getPendingReward(walletAddress);
-      setEstimatedReward(parseFloat(ethers.formatEther(reward)));
+      setEstimatedReward(parseFloat(formatEther(reward)));
     }
   };
 
