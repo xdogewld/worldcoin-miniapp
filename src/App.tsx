@@ -22,8 +22,8 @@ function App() {
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [balance, setBalance] = useState<string>("0");
-  const [amount, setAmount] = useState("");
-  const [duration, setDuration] = useState("604800");
+  const [amount, setAmount] = useState<string>("");
+  const [duration, setDuration] = useState<string>("604800"); // duration in seconds (1 week default)
   const [stakingStart, setStakingStart] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [estimatedReward, setEstimatedReward] = useState<number>(0);
@@ -42,6 +42,7 @@ function App() {
         setWalletAddress(address);
       } catch (error) {
         console.error("Error connecting wallet:", error);
+        alert("Error connecting wallet, please try again.");
       }
     } else {
       alert("Install MetaMask dulu ya!");
@@ -50,42 +51,61 @@ function App() {
 
   const fetchBalance = async () => {
     if (signer) {
-      const token = new ethers.Contract(TOKEN_ADDRESS, ERC20ABI, signer);
-      const address = await signer.getAddress();
-      const rawBalance = await token.balanceOf(address);
-      setBalance(ethers.formatEther(rawBalance));
+      try {
+        const token = new ethers.Contract(TOKEN_ADDRESS, ERC20ABI, signer);
+        const address = await signer.getAddress();
+        const rawBalance = await token.balanceOf(address);
+        setBalance(ethers.formatEther(rawBalance));
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+      }
     }
   };
 
   const calculateReward = (amount: number, duration: number): number => {
     let rate = 0;
     switch (duration) {
-      case 604800: rate = 0.05; break;
-      case 1209600: rate = 0.10; break;
-      case 2592000: rate = 0.25; break;
-      case 7776000: rate = 0.50; break;
-      case 15552000: rate = 1.00; break;
+      case 604800: rate = 0.05; break; // 1 week
+      case 1209600: rate = 0.10; break; // 2 weeks
+      case 2592000: rate = 0.25; break; // 1 month
+      case 7776000: rate = 0.50; break; // 3 months
+      case 15552000: rate = 1.00; break; // 6 months
       default: rate = 0;
     }
     return amount * rate;
   };
 
-  const handleStake = () => {
+  const handleStake = async () => {
     if (!isVerified) {
       alert("Harap login dengan World ID dulu!");
       return;
     }
-    console.log("Staking:", amount, "durasi:", duration);
-    setStakingStart(Math.floor(Date.now() / 1000));
-    setEstimatedReward(calculateReward(parseFloat(amount), parseInt(duration)));
+    try {
+      console.log("Staking:", amount, "durasi:", duration);
+      setStakingStart(Math.floor(Date.now() / 1000));
+      setEstimatedReward(calculateReward(parseFloat(amount), parseInt(duration)));
+      // Interaksi dengan kontrak staking (belum diimplementasikan)
+    } catch (error) {
+      console.error("Error during staking:", error);
+    }
   };
 
-  const handleUnstake = () => {
-    console.log("Unstaking...");
+  const handleUnstake = async () => {
+    try {
+      console.log("Unstaking...");
+      // Interaksi dengan kontrak unstaking (belum diimplementasikan)
+    } catch (error) {
+      console.error("Error during unstaking:", error);
+    }
   };
 
-  const handleClaim = () => {
-    console.log("Claiming reward...");
+  const handleClaim = async () => {
+    try {
+      console.log("Claiming reward...");
+      // Interaksi dengan kontrak claim (belum diimplementasikan)
+    } catch (error) {
+      console.error("Error during claim:", error);
+    }
   };
 
   const handleMax = () => {
