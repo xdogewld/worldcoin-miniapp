@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { motion } from "framer-motion";
 import { IDKitWidget } from "@worldcoin/idkit";
-import xDogeStakingABI from "./abi/xDogeStaking.json";
 import ERC20ABI from "./abi/ERC20.json";
 import "./index.css";
 
@@ -15,7 +14,7 @@ declare global {
 
 const STAKING_CONTRACT_ADDRESS = "0x9F3C7A0515072eACeeb1cBA192aeEBaDD900591F";
 const TOKEN_ADDRESS = "0x37cFf256E4aeD256493060669a04b59d87d509d1";
-const WORLDCOIN_APP_ID = "app_staging_yourAppId"; // Ganti dari dashboard Worldcoin
+const WORLDCOIN_APP_ID = "app_f6797f07204e9adf68c8537b4dcaebf6"; // Ganti dari dashboard Worldcoin
 
 function App() {
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
@@ -32,7 +31,7 @@ function App() {
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
-        const web3Provider = new ethers.BrowserProvider(window.ethereum);
+        const web3Provider = new ethers.Web3Provider(window.ethereum);
         await window.ethereum.request({ method: "eth_requestAccounts" });
         const signer = await web3Provider.getSigner();
         const address = await signer.getAddress();
@@ -55,7 +54,7 @@ function App() {
         const token = new ethers.Contract(TOKEN_ADDRESS, ERC20ABI, signer);
         const address = await signer.getAddress();
         const rawBalance = await token.balanceOf(address);
-        setBalance(ethers.formatEther(rawBalance));
+        setBalance(ethers.utils.formatEther(rawBalance));
       } catch (error) {
         console.error("Error fetching balance:", error);
       }
