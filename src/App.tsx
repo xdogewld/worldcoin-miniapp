@@ -6,13 +6,19 @@ import xDogeStakingABI from "./abi/xDogeStaking.json";
 import ERC20ABI from "./abi/ERC20.json";
 import "./index.css";
 
-// Ganti ini dengan address sebenarnya
-const STAKING_CONTRACT_ADDRESS = "0xYourStakingContractAddress";
-const TOKEN_ADDRESS = "0xYourTokenAddress";
+// Tambahkan ini agar TypeScript mengenali window.ethereum
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
+const STAKING_CONTRACT_ADDRESS = "0x9F3C7A0515072eACeeb1cBA192aeEBaDD900591F";
+const TOKEN_ADDRESS = "0x37cFf256E4aeD256493060669a04b59d87d509d1";
 const WORLDCOIN_APP_ID = "app_staging_yourAppId"; // Ganti dari dashboard Worldcoin
 
 function App() {
-  const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
+  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [balance, setBalance] = useState<string>("0");
@@ -26,9 +32,9 @@ function App() {
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
-        const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+        const web3Provider = new ethers.BrowserProvider(window.ethereum);
         await window.ethereum.request({ method: "eth_requestAccounts" });
-        const signer = web3Provider.getSigner();
+        const signer = await web3Provider.getSigner();
         const address = await signer.getAddress();
 
         setProvider(web3Provider);
@@ -45,8 +51,9 @@ function App() {
   const fetchBalance = async () => {
     if (signer) {
       const token = new ethers.Contract(TOKEN_ADDRESS, ERC20ABI, signer);
-      const rawBalance = await token.balanceOf(await signer.getAddress());
-      setBalance(ethers.utils.formatEther(rawBalance));
+      const address = await signer.getAddress();
+      const rawBalance = await token.balanceOf(address);
+      setBalance(ethers.formatEther(rawBalance));
     }
   };
 
