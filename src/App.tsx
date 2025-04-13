@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import {
+  BrowserProvider,
+  Contract,
+  formatEther,
+  parseEther
+} from 'ethers';
 import { motion } from "framer-motion";
 import { IDKitWidget } from "@worldcoin/idkit";
 import xDogeStakingABI from "./abi/xDogeStakingABI.json";
