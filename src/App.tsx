@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  BrowserProvider,
-  Contract,
-  formatEther
-} from "ethers";
+import { ethers, formatEther } from 'ethers';
 import { motion } from "framer-motion";
 import { IDKitWidget } from "@worldcoin/idkit";
 import xDogeStakingABI from "./abi/xDogeStakingABI.json";
@@ -21,7 +17,6 @@ const TOKEN_ADDRESS = "0x37cFf256E4aeD256493060669a04b59d87d509d1";
 const WORLDCOIN_APP_ID = "app_f6797f07204e9adf68c8537b4dcaebf6";
 
 function App() {
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [balance, setBalance] = useState<string>("0");
@@ -38,7 +33,6 @@ function App() {
       await web3Provider.send("eth_requestAccounts", []);
       const signer = await web3Provider.getSigner();
       const address = await signer.getAddress();
-      setProvider(web3Provider);
       setSigner(signer);
       setWalletAddress(address);
     } else {
@@ -56,7 +50,7 @@ function App() {
   };
 
   const fetchStakingInfo = async () => {
-    if (!signer) return;
+    if (!signer || !walletAddress) return;
     const contract = new ethers.Contract(STAKING_CONTRACT_ADDRESS, xDogeStakingABI, signer);
     const stake = await contract.stakes(walletAddress);
     if (stake.amount > 0n && !stake.unstaked) {
