@@ -8,7 +8,7 @@ import "./index.css";
 
 const STAKING_CONTRACT_ADDRESS = "0x9F3C7A0515072eACeeb1cBA192aeEBaDD900591F";
 const TOKEN_ADDRESS = "0x37cFf256E4aeD256493060669a04b59d87d509d1";
-const WORLDCOIN_APP_ID = "app_1f4da7b8ce64598df722e0d2a09ee6a8";
+const WORLDCOIN_APP_ID = "app_f6797f07204e9adf68c8537b4dcaebf6";
 
 const durations = [
   { label: "7 Days (5%)", value: 604800, reward: 5 },
@@ -19,6 +19,7 @@ const durations = [
 ];
 
 function App() {
+  const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
   const [wallet, setWallet] = useState<string>("");
   const [balance, setBalance] = useState<string>("0");
   const [amount, setAmount] = useState<number>(0);
@@ -30,33 +31,34 @@ function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState<boolean>(true);
+  const [textIndex, setTextIndex] = useState<number>(0);
 
   const selectedDuration = durations[durationIndex];
   const texts = ["Stake Your Tokens", "Earn Rewards", "Unstake When Ready"];
 
-  const [textIndex, setTextIndex] = useState<number>(0);
-
-  const connectWallet = async () => {
-    if (!window.Worldcoin) return alert("Please install Worldcoin App.");
-    const provider = new ethers.BrowserProvider(window.Worldcoin);
-    await provider.send("eth_requestAccounts", []);
-    const signer = await provider.getSigner();
-    const address = await signer.getAddress();
-    setWallet(address);
+  const handleProof = async () => {
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      setSigner(signer);
+      setWallet(address);
+      setIsVerified(true);
+    } catch (err) {
+      console.error("Verification error:", err);
+    }
   };
 
   const fetchBalance = async () => {
-    if (!wallet) return;
-    const provider = new ethers.JsonRpcProvider(); // Default RPC provider
-    const token = new ethers.Contract(TOKEN_ADDRESS, ERC20ABI, provider);
-    const balance = await token.balanceOf(wallet);
+    if (!signer) return;
+    const token = new ethers.Contract(TOKEN_ADDRESS, ERC20ABI, signer);
+    const balance = await token.balanceOf(await signer.getAddress());
     setBalance(formatEther(balance));
   };
 
   const fetchStakingInfo = async () => {
-    if (!wallet) return;
-    const provider = new ethers.JsonRpcProvider(); // Default RPC provider
-    const contract = new ethers.Contract(STAKING_CONTRACT_ADDRESS, xDogeStakingABI, provider);
+    if (!signer || !wallet) return;
+    const contract = new ethers.Contract(STAKING_CONTRACT_ADDRESS, xDogeStakingABI, signer);
     const stake = await contract.stakes(wallet);
     if (stake.amount > 0n && !stake.unstaked) {
       setStakingStart(Number(stake.startTime));
@@ -66,11 +68,9 @@ function App() {
   };
 
   const handleStake = async () => {
-    if (!isVerified) return alert("Please verify with World ID first.");
+    if (!signer || !isVerified) return alert("Please verify with World ID first.");
     setLoading(true);
     try {
-      const provider = new ethers.JsonRpcProvider(); // Default RPC provider
-      const signer = provider.getSigner();
       const token = new ethers.Contract(TOKEN_ADDRESS, ERC20ABI, signer);
       const contract = new ethers.Contract(STAKING_CONTRACT_ADDRESS, xDogeStakingABI, signer);
       const parsedAmount = parseEther(amount.toString());
@@ -96,11 +96,9 @@ function App() {
   };
 
   const handleUnstake = async () => {
-    if (!wallet) return;
+    if (!signer) return;
     setLoading(true);
     try {
-      const provider = new ethers.JsonRpcProvider(); // Default RPC provider
-      const signer = provider.getSigner();
       const contract = new ethers.Contract(STAKING_CONTRACT_ADDRESS, xDogeStakingABI, signer);
       const tx = await contract.unstake();
       setTxHash(tx.hash);
@@ -115,11 +113,9 @@ function App() {
   };
 
   const handleClaim = async () => {
-    if (!wallet) return;
+    if (!signer) return;
     setLoading(true);
     try {
-      const provider = new ethers.JsonRpcProvider(); // Default RPC provider
-      const signer = provider.getSigner();
       const contract = new ethers.Contract(STAKING_CONTRACT_ADDRESS, xDogeStakingABI, signer);
       const tx = await contract.claimReward();
       setTxHash(tx.hash);
@@ -133,9 +129,10 @@ function App() {
     }
   };
 
-  const handleProof = () => setIsVerified(true);
   const handleMax = () => setAmount(parseFloat(balance));
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
+  const increaseAmount = () => setAmount((prev) => Math.min(parseFloat(balance), prev + 1));
+  const decreaseAmount = () => setAmount((prev) => Math.max(0, prev - 1));
 
   const updateCountdown = () => {
     if (!stakingStart) return;
@@ -152,19 +149,12 @@ function App() {
     return `${h}h ${m}m ${s}s`;
   };
 
-  const increaseAmount = () => setAmount((prev) => Math.min(parseFloat(balance), prev + 1));
-  const decreaseAmount = () => setAmount((prev) => Math.max(0, prev - 1));
-
   useEffect(() => {
-    connectWallet();
-  }, []);
-
-  useEffect(() => {
-    if (wallet) {
+    if (isVerified) {
       fetchBalance();
       fetchStakingInfo();
     }
-  }, [wallet]);
+  }, [signer, isVerified]);
 
   useEffect(() => {
     const interval = setInterval(updateCountdown, 1000);
@@ -196,7 +186,6 @@ function App() {
             🐶 xDoge Staking
           </motion.h1>
 
-          {/* Breathing Text */}
           <motion.div
             className="text-center text-2xl font-semibold mb-6 animate-pulse"
             initial={{ opacity: 0 }}
@@ -218,7 +207,7 @@ function App() {
               </button>
             )}
           </IDKitWidget>
-
+          
           <div className="space-y-4 mt-6">
             <div className="flex gap-2 items-center">
               <button onClick={decreaseAmount} className="px-3 py-2 bg-gray-600 rounded-lg">-</button>
@@ -266,11 +255,11 @@ function App() {
 
             {txHash && (
               <div className="text-center text-blue-400 text-sm">
-                📝 Tx Hash: 
-                <a href={`https://worldscan.org/tx/${txHash}`} target="_blank" className="underline">
-                  {`${txHash.slice(0, 6)}...${txHash.slice(-4)}`}
-                </a>
-              </div>
+              📝 Tx Hash: 
+              <a href={`https://worldscan.org/tx/${txHash}`} target="_blank" className="underline">
+              {`${txHash.slice(0, 6)}...${txHash.slice(-4)}`}
+              </a>
+             </div>
             )}
 
             {timeLeft > 0 && (
@@ -299,6 +288,14 @@ function App() {
                 {loading ? "Unstaking..." : "Unstake"}
               </motion.button>
             </div>
+
+            <motion.button
+              onClick={handleClaim}
+              disabled={loading}
+              className="bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 py-3 px-8 rounded-xl font-semibold text-white shadow-lg hover:scale-105 transition-all duration-300 w-full mt-4"
+            >
+              {loading ? "Claiming..." : "Claim Rewards"}
+            </motion.button>
           </div>
         </motion.div>
       </div>
