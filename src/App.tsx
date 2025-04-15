@@ -8,7 +8,7 @@ import "./index.css";
 
 const STAKING_CONTRACT_ADDRESS = "0x9F3C7A0515072eACeeb1cBA192aeEBaDD900591F";
 const TOKEN_ADDRESS = "0x37cFf256E4aeD256493060669a04b59d87d509d1";
-const WORLDCOIN_APP_ID = "app_f6797f07204e9adf68c8537b4dcaebf6";
+const WORLDCOIN_APP_ID = "app_1f4da7b8ce64598df722e0d2a09ee6a8";
 
 const durations = [
   { label: "7 Days (5%)", value: 604800, reward: 5 },
