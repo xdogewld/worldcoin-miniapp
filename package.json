@@ -14,10 +14,14 @@
     "@worldcoin/idkit": "^2.0.2",
     "@worldcoin/minikit-js": "^1.8.0",
     "@worldcoin/minikit-react": "^1.8.0",
+    "canvas-confetti": "^1.9.3",
+    "chart.js": "^4.4.8",
     "ethers": "^6.13.5",
-    "framer-motion": "^12.6.5",
+    "framer-motion": "^12.7.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^2.15.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
